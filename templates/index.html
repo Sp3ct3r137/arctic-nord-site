@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Arctic Nord — Home{% endblock %}
+{% block meta_desc %}Arctic Nord Flask demo — Polar Night backgrounds, Snow Storm text, Frost accents, and an orange CTA.{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════════════════════
+     HERO
+══════════════════════════════════════════════════════════════ -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container--wide">
+    <div class="hero__grid">
+
+      <!-- Text side -->
+      <div class="hero__text">
+        <p class="hero__eyebrow">Arctic Nord + Flask</p>
+
+        <h1 class="hero__title" id="hero-title">
+          Cold colours.<br>
+          <span class="frost">Clear</span> design.<br>
+          <span class="accent">Warm</span> accents.
+        </h1>
+
+        <p class="hero__desc">
+          A minimal Python / Flask website dressed in the full
+          <strong>Nord colour palette</strong> — Polar Night backgrounds,
+          Snow Storm typography, Frost interactive elements, and a single
+          <strong style="color:var(--color-cta)">orange</strong> accent to
+          pull the eye where it matters.
+        </p>
+
+        <div class="hero__actions">
+          <a href="{{ url_for('about') }}"         class="btn btn--primary">Explore Palette →</a>
+          <a href="{{ url_for('documentation') }}" class="btn btn--outline" >Read Docs</a>
+        </div>
+      </div>
+
+      <!-- Visual side — animated canvas -->
+      <div class="hero__visual" aria-hidden="true">
+        <canvas id="snowCanvas" class="snowflake-canvas"></canvas>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     FEATURE CARDS
+══════════════════════════════════════════════════════════════ -->
+<section class="features section" aria-labelledby="features-title">
+  <div class="container">
+    <header class="features__header">
+      <p class="features__eyebrow">Palette Breakdown</p>
+      <h2 class="features__title" id="features-title">Four palettes. One identity.</h2>
+    </header>
+
+    <ul class="features__grid" role="list">
+      {% for f in features %}
+      <li class="card">
+        <div class="card__icon" aria-hidden="true">{{ f.icon }}</div>
+        <h3 class="card__title">{{ f.title }}</h3>
+        <p class="card__desc">{{ f.desc }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     API DEMO
+══════════════════════════════════════════════════════════════ -->
+<section class="api-demo section" aria-labelledby="api-title">
+  <div class="container">
+    <div class="api-demo__inner">
+      <p class="api-demo__eyebrow">Live Endpoint</p>
+      <h2 class="api-demo__title" id="api-title">Try the palette API</h2>
+      <p class="api-demo__desc">
+        Click below to fire a real <code>GET /api/palette</code> request and see
+        the Nord colour data returned as JSON.
+      </p>
+
+      <div class="terminal" role="region" aria-label="API demo terminal">
+        <div class="terminal__bar" aria-hidden="true">
+          <span class="terminal__dot terminal__dot--red"></span>
+          <span class="terminal__dot terminal__dot--yellow"></span>
+          <span class="terminal__dot terminal__dot--green"></span>
+          <span class="terminal__title">arctic-nord — bash</span>
+        </div>
+        <div class="terminal__body">
+          <pre id="apiOutput"><span class="terminal__prompt">$ </span><span class="terminal__output">Click "Load Data" to fetch /api/palette …</span></pre>
+        </div>
+      </div>
+
+      <button class="terminal__load-btn" id="loadApiBtn" type="button" aria-controls="apiOutput">
+        Load Data
+      </button>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

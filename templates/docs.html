@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Docs — Arctic Nord{% endblock %}
+{% block meta_desc %}How to run, configure, and extend the Arctic Nord Flask site.{% endblock %}
+
+{% block content %}
+
+<section class="section">
+  <div class="container--wide">
+    <div class="docs-layout">
+
+      <!-- ── Sidebar ──────────────────────────────────────── -->
+      <aside class="docs-sidebar" aria-label="Documentation navigation">
+        <p class="docs-sidebar__title">On this page</p>
+        <ul class="docs-sidebar__nav" role="list">
+          <li><a href="#quickstart">Quick Start</a></li>
+          <li><a href="#structure">File Structure</a></li>
+          <li><a href="#routes">Routes</a></li>
+          <li><a href="#api">API Reference</a></li>
+          <li><a href="#colours">Colour Tokens</a></li>
+          <li><a href="#extending">Extending</a></li>
+          <li><a href="#deploy">Deployment</a></li>
+        </ul>
+      </aside>
+
+      <!-- ── Main content ─────────────────────────────────── -->
+      <article class="docs-content">
+
+        <h2 id="quickstart">Quick Start</h2>
+        <p>Clone the repo, install the single dependency, and run:</p>
+        <pre><code># 1 — clone
+git clone https://github.com/Sp3ct3r137/arctic-nord-site.git
+cd arctic-nord-site
+
+# 2 — create a virtual environment (recommended)
+python -m venv .venv
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
+
+# 3 — install Flask
+pip install -r requirements.txt
+
+# 4 — start the dev server
+python app.py
+
+# Open http://localhost:5000 in your browser</code></pre>
+
+        <p>
+          The dev server runs with <code>debug=True</code> — Flask will
+          auto-reload whenever you save a Python or template file.
+          Set <code>debug=False</code> before deploying to production.
+        </p>
+
+
+        <h2 id="structure">File Structure</h2>
+        <div class="file-tree" role="region" aria-label="Project file tree">
+<span class="dir">arctic-nord-site/</span>
+├── <span class="hl">app.py</span>                    <span class="note"># Flask application — routes + API</span>
+├── requirements.txt              <span class="note"># pip dependencies (just Flask)</span>
+├── README.md                     <span class="note"># project overview + quick-start</span>
+│
+├── <span class="dir">templates/</span>                <span class="note"># Jinja2 HTML templates</span>
+│   ├── <span class="hl">base.html</span>             <span class="note"># shared layout (nav + footer)</span>
+│   ├── index.html                <span class="note"># home page</span>
+│   ├── about.html                <span class="note"># palette + stack info</span>
+│   └── docs.html                 <span class="note"># this page</span>
+│
+├── <span class="dir">static/</span>
+│   ├── <span class="dir">css/</span>
+│   │   └── <span class="hl">style.css</span>         <span class="note"># all styles — Nord tokens + components</span>
+│   └── <span class="dir">js/</span>
+│       └── <span class="hl">main.js</span>           <span class="note"># canvas snow, API fetch, scroll effects</span>
+│
+└── <span class="dir">docs/</span>
+    └── COLOURS.md                <span class="note"># standalone colour reference</span>
+        </div>
+
+
+        <h2 id="routes">Routes</h2>
+        <p>All routes are defined in <code>app.py</code>:</p>
+
+        <h3>GET /</h3>
+        <p>
+          Renders <code>index.html</code>. Passes a <code>features</code> list
+          (Python dicts) into the Jinja2 template context so the feature cards
+          are data-driven — edit the list in <code>app.py</code> to change the cards
+          without touching the HTML.
+        </p>
+
+        <h3>GET /about</h3>
+        <p>
+          Renders <code>about.html</code>. Passes the full <code>palette</code>
+          list (16 Nord colours + orange). The template uses
+          <code>{{ '{{' }} palette | groupby('group') {{ '}}' }}</code>
+          to automatically sort swatches into their palette groups.
+        </p>
+
+        <h3>GET /docs</h3>
+        <p>Renders this page (<code>docs.html</code>). Static content only.</p>
+
+
+        <h2 id="api">API Reference</h2>
+
+        <h3>GET /api/palette</h3>
+        <p>Returns the full colour set as JSON. No auth required.</p>
+        <pre><code>GET /api/palette
+
+Response 200 OK
+Content-Type: application/json
+
+{
+  "count": 12,
+  "palette": [
+    {
+      "name":  "nord0",
+      "hex":   "#2E3440",
+      "group": "Polar Night",
+      "role":  "Background"
+    },
+    ...
+  ]
+}</code></pre>
+
+        <p>
+          You can extend this endpoint — add query params for filtering by group,
+          or wire it to a database if you want dynamic theme management.
+        </p>
+
+
+        <h2 id="colours">Colour Tokens</h2>
+        <p>
+          Every colour lives as a CSS custom property in <code>static/css/style.css</code>
+          under <code>:root</code>. The semantic aliases are what you actually use in
+          component styles:
+        </p>
+        <pre><code>/* Raw Nord values */
+--nord0: #2E3440;   /* darkest background */
+--nord8: #88C0D0;   /* primary frost accent */
+--orange: #D08770;  /* CTA / warm accent */
+
+/* Semantic aliases (use these in components) */
+--color-bg:      var(--nord0);
+--color-surface: var(--nord1);
+--color-text:    var(--nord5);
+--color-accent:  var(--nord8);   /* frost blue */
+--color-cta:     var(--orange);  /* warm orange */</code></pre>
+
+        <p>
+          Never hard-code hex values in component CSS — always reference a token.
+          This makes re-theming a one-file change.
+        </p>
+
+
+        <h2 id="extending">Extending the Site</h2>
+
+        <h3>Adding a new page</h3>
+        <ul>
+          <li>Add a route function in <code>app.py</code> decorated with <code>@app.route("/your-path")</code>.</li>
+          <li>Create <code>templates/your-page.html</code> and start it with <code>{% raw %}{% extends "base.html" %}{% endraw %}</code>.</li>
+          <li>Add a nav link in <code>base.html</code> inside <code>.nav__links</code>.</li>
+        </ul>
+
+        <h3>Changing colours</h3>
+        <ul>
+          <li>Open <code>static/css/style.css</code> and edit the <code>:root</code> block.</li>
+          <li>The semantic aliases (<code>--color-bg</code>, <code>--color-cta</code>, etc.) are the only values your component styles should reference — update the raw Nord vars and everything cascades automatically.</li>
+        </ul>
+
+        <h3>Adding a new API endpoint</h3>
+        <pre><code>@app.route("/api/my-endpoint")
+def my_endpoint():
+    data = {"key": "value"}
+    return jsonify(data)</code></pre>
+
+
+        <h2 id="deploy">Deployment</h2>
+        <p>Flask's built-in server is for development only. For production use <strong>Gunicorn</strong>:</p>
+        <pre><code>pip install gunicorn
+gunicorn app:app --bind 0.0.0.0:8000 --workers 4</code></pre>
+
+        <p>One-click deploy options:</p>
+        <ul>
+          <li><strong>Railway</strong> — push the repo, set start command to <code>gunicorn app:app</code>.</li>
+          <li><strong>Render</strong> — create a Web Service, Python env, same start command.</li>
+          <li><strong>Fly.io</strong> — <code>fly launch</code> auto-detects Flask.</li>
+          <li><strong>Google Cloud Run</strong> — add a <code>Dockerfile</code> with Gunicorn (see below).</li>
+        </ul>
+
+        <pre><code># Minimal Dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8080
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8080", "--workers", "2"]</code></pre>
+
+      </article>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

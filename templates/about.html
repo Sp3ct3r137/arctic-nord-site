@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}About — Arctic Nord{% endblock %}
+{% block meta_desc %}Learn about the Nord colour system, the stack, and why orange was chosen as the accent.{% endblock %}
+
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <p class="hero__eyebrow" style="margin-bottom:var(--space-3)">About the Project</p>
+    <h1 style="font-family:var(--font-display);font-size:var(--text-2xl);margin-bottom:var(--space-6)">
+      The Palette &amp; the Stack
+    </h1>
+    <p style="color:var(--color-text-muted);max-width:60ch;margin-bottom:var(--space-10)">
+      Arctic Nord is a minimal Flask site that demonstrates how the 16-colour
+      <a href="https://www.nordtheme.com" target="_blank" rel="noopener" style="color:var(--color-accent)">Nord palette</a>
+      can be applied to web UI — with a single warm orange pulled from
+      <code>nord12</code> (#D08770) as the call-to-action accent.
+    </p>
+
+    <!-- ── Stack table ───────────────────────────────────── -->
+    <h2 style="font-family:var(--font-display);font-size:var(--text-xl);margin-bottom:var(--space-4)">Tech Stack</h2>
+    <table class="stack-table" aria-label="Technology stack">
+      <thead>
+        <tr>
+          <th>Layer</th>
+          <th>Technology</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Server</td>       <td><code>Python 3 / Flask</code></td>     <td>Routes, Jinja2 templates, JSON API</td></tr>
+        <tr><td>Templating</td>   <td><code>Jinja2</code></td>               <td>Template inheritance via base.html</td></tr>
+        <tr><td>Styles</td>       <td><code>Vanilla CSS</code></td>          <td>CSS custom properties, fluid type, 4px spacing scale</td></tr>
+        <tr><td>JavaScript</td>   <td><code>Vanilla JS (ES2020)</code></td>  <td>Canvas animation, fetch API, Intersection Observer</td></tr>
+        <tr><td>Fonts</td>        <td><code>Google Fonts</code></td>         <td>JetBrains Mono (display) + Inter (body)</td></tr>
+        <tr><td>Colour system</td><td><code>Nord 0–15 + orange</code></td>   <td>All values in CSS custom properties</td></tr>
+        <tr><td>Hosting</td>      <td><code>Any WSGI host</code></td>        <td>Gunicorn, Railway, Render, Fly.io, etc.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+<!-- ── Palette swatches ─────────────────────────────────────── -->
+<section class="palette-section section" aria-labelledby="palette-title">
+  <div class="container">
+    <p class="features__eyebrow">Colour System</p>
+    <h2 style="font-family:var(--font-display);font-size:var(--text-xl)" id="palette-title">
+      All 16 Nord colours + orange
+    </h2>
+
+    {% set groups = palette | groupby('group') %}
+    {% for group_name, swatches in groups %}
+    <div class="palette-group">
+      <p class="palette-group__label">{{ group_name }}</p>
+      <div class="palette-grid">
+        {% for s in swatches %}
+        <div class="swatch {{ 'swatch--orange' if 'orange' in s.name }}">
+          <div class="swatch__color" style="background:{{ s.hex }};" aria-label="{{ s.name }} colour swatch"></div>
+          <div class="swatch__info">
+            <p class="swatch__name">{{ s.name }}</p>
+            <p class="swatch__hex">{{ s.hex }}</p>
+            <p class="swatch__role">{{ s.role }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+{% endblock %}

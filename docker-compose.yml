@@ -1,0 +1,98 @@
+# =============================================================
+# docker-compose.yml — Arctic Nord Site
+# =============================================================
+# Services:
+#   app   — Gunicorn running the Flask WSGI app (port 8000, internal only)
+#   nginx — Nginx reverse proxy (ports 80 / 443, public-facing)
+#
+# Usage:
+#   Start:   docker compose up -d
+#   Rebuild: docker compose up -d --build
+#   Logs:    docker compose logs -f
+#   Stop:    docker compose down
+# =============================================================
+
+services:
+
+  # ── Flask / Gunicorn ────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arctic-nord-app
+    restart: unless-stopped
+
+    # Gunicorn listens on 8000 inside the Docker network.
+    # We do NOT expose 8000 to the host — only Nginx can reach it.
+    expose:
+      - "8000"
+
+    environment:
+      # Set to 0 in production (already handled by Gunicorn)
+      FLASK_ENV: production
+      # Add any other env vars here (e.g. SECRET_KEY, DATABASE_URL)
+
+    # Named volume so Nginx can serve /static/ directly
+    volumes:
+      - static_files:/app/static
+
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+    networks:
+      - internal
+
+
+  # ── Nginx ───────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine          # small, well-maintained official image
+    container_name: arctic-nord-nginx
+    restart: unless-stopped
+
+    ports:
+      - "80:80"                       # HTTP
+      # - "443:443"                   # uncomment when TLS certs are in place
+
+    volumes:
+      # Nginx config
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+      # Serve Flask static files directly (no Python hit)
+      - static_files:/app/static:ro
+
+      # TLS certificates — uncomment when using HTTPS
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+      # - /var/www/certbot:/var/www/certbot:ro
+
+    depends_on:
+      app:
+        condition: service_healthy   # wait until Gunicorn is ready
+
+    networks:
+      - internal
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+
+# ── Named volumes ────────────────────────────────────────────
+volumes:
+  static_files:
+    # Shared between app (writes) and nginx (reads)
+    # Populated when the app container starts
+
+
+# ── Networks ─────────────────────────────────────────────────
+networks:
+  internal:
+    driver: bridge
+    # All inter-service traffic stays inside this network.
+    # Only Nginx's port 80 (and optionally 443) is exposed to the host.

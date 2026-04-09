@@ -176,27 +176,68 @@ Arctic aesthetic. One warm colour against 15 cold ones is enough.
 
 ## Production Deployment
 
-Flask's built-in server is **development only**. Run Gunicorn in production:
+Flask's built-in server is **development only**.
+
+### Option A — Docker Compose + Nginx (recommended)
+
+This is the full production stack: Nginx handles static files and TLS,
+Gunicorn runs the Flask app behind it.
 
 ```bash
-pip install gunicorn
+# Build and start both containers
+docker compose up -d --build
+
+# Tail logs
+docker compose logs -f
+
+# Stop
+docker compose down
+```
+
+**What runs:**
+
+| Container | Image | Port | Role |
+|-----------|-------|------|------|
+| `arctic-nord-nginx` | `nginx:1.27-alpine` | `80` (public) | Reverse proxy, static files, gzip |
+| `arctic-nord-app`  | Built from `Dockerfile` | `8000` (internal only) | Gunicorn / Flask WSGI |
+
+Nginx serves `/static/` directly from a shared Docker volume — CSS and JS
+never hit Python. Everything else is proxied to Gunicorn.
+
+### Option B — Gunicorn only (bare metal / PaaS)
+
+```bash
+pip install -r requirements.txt
 gunicorn app:app --bind 0.0.0.0:8000 --workers 4
 ```
 
-### Minimal Dockerfile (Google Cloud Run / any container host)
+One-click PaaS hosts: **Railway**, **Render**, **Fly.io** — push the repo and
+set the start command to `gunicorn app:app --bind 0.0.0.0:8000`.
 
-```dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8080
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8080", "--workers", "2"]
+### Nginx config highlights (`nginx/nginx.conf`)
+
+- **Reverse proxy** — all non-static requests forwarded to `app:8000`
+- **Static file serving** — `/static/` aliased to the shared volume; 30-day cache headers
+- **Gzip** — enabled for CSS, JS, JSON, SVG
+- **Security headers** — `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`
+- **Health check** — `GET /healthz` returns `200 ok` for load balancers
+- **HTTPS** — full TLS server block included, commented out; fill in cert paths and uncomment
+
+### Enabling HTTPS (Let's Encrypt)
+
+```bash
+# Install Certbot
+sudo apt install certbot
+
+# Issue cert (stop Nginx first so port 80 is free)
+docker compose stop nginx
+sudo certbot certonly --standalone -d yourdomain.com
+docker compose start nginx
+
+# Then uncomment the HTTPS server block in nginx/nginx.conf
+# and add the 443:443 port mapping in docker-compose.yml
+docker compose restart nginx
 ```
-
-One-click hosts: **Railway**, **Render**, **Fly.io** — push the repo and set
-the start command to `gunicorn app:app`.
 
 ---
 

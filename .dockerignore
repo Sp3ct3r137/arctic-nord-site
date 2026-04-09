@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Docker files themselves (no need to copy into image)
+Dockerfile
+docker-compose.yml
+.dockerignore

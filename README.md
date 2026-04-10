@@ -225,19 +225,39 @@ set the start command to `gunicorn app:app --bind 0.0.0.0:8000`.
 
 ### Enabling HTTPS (Let's Encrypt)
 
+Run the setup script — it handles everything automatically:
+
 ```bash
-# Install Certbot
-sudo apt install certbot
+# Interactive (prompts for domain + email)
+sudo bash scripts/setup-https.sh
 
-# Issue cert (stop Nginx first so port 80 is free)
-docker compose stop nginx
-sudo certbot certonly --standalone -d yourdomain.com
-docker compose start nginx
+# Non-interactive (pass flags directly)
+sudo bash scripts/setup-https.sh --domain yourdomain.com --email you@yourdomain.com
 
-# Then uncomment the HTTPS server block in nginx/nginx.conf
-# and add the 443:443 port mapping in docker-compose.yml
-docker compose restart nginx
+# Dry run — test the full flow without issuing a real cert
+sudo bash scripts/setup-https.sh --domain yourdomain.com --email you@yourdomain.com --dry-run
 ```
+
+**What the script does in order:**
+
+1. Prompts for your domain and email (or reads from `--domain` / `--email` flags)
+2. Validates both inputs before touching anything
+3. Checks that `certbot`, `docker`, and `docker compose` are installed
+4. Stops the Nginx container so port 80 is free for the ACME challenge
+5. Runs `certbot certonly --standalone` to issue the Let's Encrypt certificate
+6. Patches `nginx/nginx.conf` — fills in your domain, uncomments the full HTTPS server block and the HTTP→HTTPS redirect block
+7. Patches `docker-compose.yml` — uncomments port `443:443` and the `/etc/letsencrypt` volume mount
+8. Patches this `README.md` — replaces `yourdomain.com` with your real domain
+9. Backs up every modified file (`*.bak`) before touching it
+10. Validates the new Nginx config with `nginx -t` before restarting
+11. Restarts the Nginx container
+12. Installs a cron job to auto-renew the cert twice daily
+
+**Requirements:**
+- `certbot` installed (`sudo apt install certbot`)
+- Docker + docker compose running
+- Port 80 pointed at this machine
+- Run with `sudo` (Certbot needs root to write to `/etc/letsencrypt`)
 
 ---
 

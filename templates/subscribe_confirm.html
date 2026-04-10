@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}You're in — Arctic Nord{% endblock %}
+{% block meta_desc %}Subscription confirmed. Welcome to Arctic Nord.{% endblock %}
+
+{% block content %}
+
+<section class="confirm-section section">
+  <div class="container">
+    <div class="confirm-card">
+
+      <!-- Animated checkmark -->
+      <div class="confirm-card__icon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="confirm-check-svg">
+          <circle cx="32" cy="32" r="30" stroke="var(--color-cta)" stroke-width="3" class="confirm-check__circle"/>
+          <polyline points="18,32 28,44 46,22" stroke="var(--color-cta)" stroke-width="3.5"
+                    stroke-linecap="round" stroke-linejoin="round" class="confirm-check__tick"/>
+        </svg>
+      </div>
+
+      <h1 class="confirm-card__title">
+        You're in, <span style="color:var(--color-cta)">{{ name }}</span>.
+      </h1>
+
+      <p class="confirm-card__tier">
+        <span class="badge badge--orange">{{ tier }} plan</span>
+      </p>
+
+      <p class="confirm-card__body">
+        Your subscription is being set up. Check your inbox for a confirmation
+        email with next steps.
+        <!-- EDIT: update this copy to match what your backend actually sends -->
+      </p>
+
+      <div class="confirm-card__actions">
+        <a href="{{ url_for('index') }}"     class="btn btn--primary">Back to Home</a>
+        <a href="{{ url_for('subscribe') }}" class="btn btn--ghost"  >Change plan</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+/* Draw the SVG check animation on load */
+document.addEventListener("DOMContentLoaded", () => {
+  const circle = document.querySelector(".confirm-check__circle");
+  const tick   = document.querySelector(".confirm-check__tick");
+  if (!circle || !tick) return;
+
+  const cLen = circle.getTotalLength ? circle.getTotalLength() : 188;
+  const tLen = tick.getTotalLength   ? tick.getTotalLength()   : 44;
+
+  circle.style.cssText = `stroke-dasharray:${cLen};stroke-dashoffset:${cLen};transition:stroke-dashoffset 0.6s ease`;
+  tick.style.cssText   = `stroke-dasharray:${tLen};stroke-dashoffset:${tLen};transition:stroke-dashoffset 0.4s ease 0.5s`;
+
+  requestAnimationFrame(() => {
+    circle.style.strokeDashoffset = "0";
+    tick.style.strokeDashoffset   = "0";
+  });
+});
+</script>
+{% endblock %}

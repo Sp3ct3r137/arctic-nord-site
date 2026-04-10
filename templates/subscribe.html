@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Subscribe — Arctic Nord{% endblock %}
+{% block meta_desc %}Choose a plan and subscribe to Arctic Nord. Edit tiers freely in app.py.{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════════════════════
+     HERO
+══════════════════════════════════════════════════════════════ -->
+<section class="sub-hero section">
+  <div class="container">
+    <div class="sub-hero__inner">
+      <p class="sub-hero__eyebrow">Pricing &amp; Plans</p>
+      <h1 class="sub-hero__title">
+        Pick your <span class="sub-hero__accent">tier</span>
+      </h1>
+      <p class="sub-hero__desc">
+        Choose the plan that fits. All tiers include the full Nord theme.
+        Upgrade or cancel any time.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     FLASH MESSAGES (server-side validation errors)
+══════════════════════════════════════════════════════════════ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="container" style="margin-bottom: var(--space-4);">
+    {% for category, message in messages %}
+    <div class="flash flash--{{ category }}" role="alert">
+      <span>{{ message }}</span>
+      <button class="flash__close" onclick="this.parentElement.remove()" aria-label="Dismiss">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+
+<!-- ══════════════════════════════════════════════════════════
+     TIER CARDS
+     ── EDIT TIERS in app.py → subscribe() → tiers list ──────
+══════════════════════════════════════════════════════════════ -->
+<section class="sub-tiers section" aria-labelledby="tiers-heading">
+  <div class="container">
+    <h2 class="sr-only" id="tiers-heading">Subscription tiers</h2>
+
+    <div class="tier-grid">
+      {% for tier in tiers %}
+      <div class="tier-card {% if tier.highlight %}tier-card--highlight{% endif %}"
+           data-tier="{{ tier.value }}">
+
+        <!-- Badge (e.g. "Popular") -->
+        {% if tier.badge %}
+        <div class="tier-card__badge">{{ tier.badge }}</div>
+        {% endif %}
+
+        <!-- Header -->
+        <div class="tier-card__head">
+          <h3 class="tier-card__name">{{ tier.name }}</h3>
+          <div class="tier-card__pricing">
+            <span class="tier-card__price">{{ tier.price }}</span>
+            {% if tier.period %}
+            <span class="tier-card__period">{{ tier.period }}</span>
+            {% endif %}
+          </div>
+          <p class="tier-card__desc">{{ tier.description }}</p>
+        </div>
+
+        <!-- Features list -->
+        <ul class="tier-card__features" role="list">
+          {% for feat in tier.features %}
+          <li class="tier-card__feature">
+            <span class="tier-card__check" aria-hidden="true">✓</span>
+            {{ feat }}
+          </li>
+          {% endfor %}
+        </ul>
+
+        <!-- Select button — clicking pre-fills the form below -->
+        <button
+          class="btn {% if tier.highlight %}btn--primary{% else %}btn--outline{% endif %} tier-card__select"
+          type="button"
+          data-tier-value="{{ tier.value }}"
+          data-tier-name="{{ tier.name }}"
+          onclick="selectTier('{{ tier.value }}', '{{ tier.name }}')"
+        >
+          {% if tier.price == "Free" %}Get started{% else %}Subscribe to {{ tier.name }}{% endif %}
+        </button>
+
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SUBSCRIPTION FORM
+     ── EDIT HANDLER in app.py → subscribe() POST block ──────
+══════════════════════════════════════════════════════════════ -->
+<section class="sub-form-section section" aria-labelledby="form-heading" id="signup-form">
+  <div class="container">
+    <div class="sub-form-wrap">
+
+      <header class="sub-form-wrap__header">
+        <h2 class="sub-form-wrap__title" id="form-heading">
+          Sign up for
+          <span class="sub-form-wrap__tier-label" id="formTierLabel">a plan</span>
+        </h2>
+        <p class="sub-form-wrap__sub">
+          Fill in your details below. You can change your plan any time.
+        </p>
+      </header>
+
+      <!-- ── The Form ──────────────────────────────────────── -->
+      <form
+        class="sub-form"
+        method="POST"
+        action="{{ url_for('subscribe') }}#signup-form"
+        novalidate
+      >
+        <!-- Hidden tier field — updated by JS when a card is clicked -->
+        <input type="hidden" name="tier" id="tierInput" value="{{ tiers[0].value }}">
+
+        <!-- Name -->
+        <div class="form-group">
+          <label class="form-label" for="nameInput">
+            Full name <span class="form-label__req" aria-label="required">*</span>
+          </label>
+          <input
+            class="form-control"
+            type="text"
+            id="nameInput"
+            name="name"
+            placeholder="Zero Ch1ll"
+            autocomplete="name"
+            required
+            value="{{ request.form.get('name', '') }}"
+          />
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="emailInput">
+            Email address <span class="form-label__req" aria-label="required">*</span>
+          </label>
+          <input
+            class="form-control"
+            type="email"
+            id="emailInput"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+            value="{{ request.form.get('email', '') }}"
+          />
+        </div>
+
+        <!-- ── ADD EXTRA FIELDS HERE ──────────────────────────
+             Copy a form-group block and change name/type/label.
+             The value lands in request.form.get("field_name").
+        ─────────────────────────────────────────────────────── -->
+
+        <!-- Selected plan (read-only display) -->
+        <div class="form-group">
+          <label class="form-label">Selected plan</label>
+          <div class="form-plan-display" id="planDisplay">
+            {{ tiers[0].name }}
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button class="btn btn--primary sub-form__submit" type="submit">
+          Complete signup →
+        </button>
+
+        <p class="sub-form__legal">
+          By signing up you agree to our
+          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          <!-- ── EDIT: link to your real ToS / privacy pages ── -->
+        </p>
+      </form>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     FAQ  — edit questions/answers inline below
+══════════════════════════════════════════════════════════════ -->
+<section class="sub-faq section" aria-labelledby="faq-heading">
+  <div class="container">
+    <h2 class="sub-faq__title" id="faq-heading">Frequently asked</h2>
+
+    <div class="faq-list">
+
+      <!-- ── EDIT FAQ items freely ──────────────────────────── -->
+      <details class="faq-item">
+        <summary class="faq-item__q">Can I cancel any time?</summary>
+        <p class="faq-item__a">
+          Yes. There are no contracts or lock-in periods.
+          Cancel from your account settings and you won't be charged again.
+          <!-- EDIT this answer -->
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-item__q">What payment methods do you accept?</summary>
+        <p class="faq-item__a">
+          We accept all major credit and debit cards via Stripe.
+          PayPal support is coming soon.
+          <!-- EDIT: update once you wire up a payment provider -->
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-item__q">Can I switch tiers later?</summary>
+        <p class="faq-item__a">
+          Absolutely. Upgrade or downgrade any time from your account page.
+          Prorated billing applies for mid-cycle changes.
+          <!-- EDIT this answer -->
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-item__q">Is there a free trial?</summary>
+        <p class="faq-item__a">
+          The Frost tier is permanently free — no trial period, no expiry.
+          Paid tiers do not currently include a trial, but that may change.
+          <!-- EDIT this answer -->
+        </p>
+      </details>
+
+      <!-- ── ADD more FAQ items by copying a <details> block above ── -->
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+
+{% block scripts_extra %}
+<script>
+/**
+ * selectTier(value, name)
+ * ────────────────────────
+ * Called when a tier card's "Subscribe" button is clicked.
+ * Updates:
+ *   - the hidden <input name="tier"> so the correct tier is submitted
+ *   - the "Selected plan" display in the form
+ *   - the form heading label
+ *   - which tier card has the "active" ring
+ * Then scrolls the page to the signup form.
+ */
+function selectTier(value, name) {
+  // Update hidden input
+  document.getElementById("tierInput").value   = value;
+
+  // Update visible labels
+  document.getElementById("planDisplay").textContent   = name;
+  document.getElementById("formTierLabel").textContent = name;
+
+  // Ring the active card
+  document.querySelectorAll(".tier-card").forEach(c => c.classList.remove("tier-card--active"));
+  const active = document.querySelector(`.tier-card[data-tier="${value}"]`);
+  if (active) active.classList.add("tier-card--active");
+
+  // Smooth-scroll to form
+  document.getElementById("signup-form").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// Pre-select the highlighted (recommended) tier on page load
+document.addEventListener("DOMContentLoaded", () => {
+  const highlighted = document.querySelector(".tier-card--highlight");
+  if (highlighted) {
+    const value = highlighted.dataset.tier;
+    const name  = highlighted.querySelector(".tier-card__name").textContent.trim();
+    selectTier(value, name);
+    // Don't scroll on load — just pre-fill silently
+    // Override the scroll from selectTier without duplicating code:
+    history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+  }
+});
+</script>
+{% endblock %}

@@ -50,10 +50,11 @@
         <li><a href="{{ url_for('index') }}"         class="{{ 'active' if request.endpoint == 'index' }}">Home</a></li>
         <li><a href="{{ url_for('about') }}"         class="{{ 'active' if request.endpoint == 'about' }}">About</a></li>
         <li><a href="{{ url_for('documentation') }}" class="{{ 'active' if request.endpoint == 'documentation' }}">Docs</a></li>
+        <li><a href="{{ url_for('subscribe') }}"     class="{{ 'active' if request.endpoint in ('subscribe', 'subscribe_confirm') }}">Subscribe</a></li>
         <li><a href="/api/palette"                   target="_blank" rel="noopener">API ↗</a></li>
       </ul>
 
-      <a href="{{ url_for('documentation') }}" class="nav__cta">Get Started</a>
+      <a href="{{ url_for('subscribe') }}" class="nav__cta">Get Started</a>
     </div>
   </nav>
 

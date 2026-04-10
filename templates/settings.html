@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Settings — Arctic Nord{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container--wide">
+    <div class="docs-layout">
+
+      <!-- Sidebar -->
+      <aside class="docs-sidebar" aria-label="Settings navigation">
+        <p class="docs-sidebar__title">Settings</p>
+        <ul class="docs-sidebar__nav" role="list">
+          <li><a href="#account">Account</a></li>
+          <li><a href="#preferences">Preferences</a></li>
+          <li><a href="#password">Password</a></li>
+          <li><a href="#danger">Danger Zone</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main content -->
+      <div class="docs-content">
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash flash--{{ category }}" style="margin-bottom:var(--space-6)" role="alert">
+              <span>{{ message }}</span>
+              <button class="flash__close" onclick="this.parentElement.remove()" aria-label="Dismiss">✕</button>
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- ── Account details ─────────────────────────────── -->
+        <h2 id="account">Account</h2>
+        <p>Update your username and email address.</p>
+
+        <form class="sub-form" method="POST" action="{{ url_for('settings.index') }}" novalidate style="max-width:480px">
+          <input type="hidden" name="action" value="save_account">
+
+          <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input class="form-control" type="text" id="username" name="username"
+                   value="{{ user.username }}" minlength="3" maxlength="80" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email address</label>
+            <input class="form-control" type="email" id="email" name="email"
+                   value="{{ user.email }}" required>
+          </div>
+
+          <!-- EDIT: add more account fields here -->
+
+          <button class="btn btn--outline" type="submit">Save account details</button>
+        </form>
+
+        <!-- ── Preferences ─────────────────────────────────── -->
+        <h2 id="preferences">Preferences</h2>
+        <p>Control how Arctic Nord looks and behaves for you.</p>
+
+        <form class="sub-form" method="POST" action="{{ url_for('settings.index') }}" style="max-width:480px">
+          <input type="hidden" name="action" value="save_prefs">
+
+          <!-- Theme -->
+          <div class="form-group">
+            <label class="form-label">Theme</label>
+            <div class="form-radio-group">
+              <label class="form-radio">
+                <input type="radio" name="theme" value="dark"
+                       {% if settings.theme == 'dark' %}checked{% endif %}>
+                <span>Dark</span>
+              </label>
+              <label class="form-radio">
+                <input type="radio" name="theme" value="light"
+                       {% if settings.theme == 'light' %}checked{% endif %}>
+                <span>Light</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="form-group">
+            <label class="form-label">Email notifications</label>
+            <label class="form-check" style="margin-bottom:var(--space-2)">
+              <input class="form-check__input" type="checkbox" name="email_notifications" value="1"
+                     {% if settings.email_notifications %}checked{% endif %}>
+              <span class="form-check__label">Account and security notifications</span>
+            </label>
+            <label class="form-check">
+              <input class="form-check__input" type="checkbox" name="marketing_emails" value="1"
+                     {% if settings.marketing_emails %}checked{% endif %}>
+              <span class="form-check__label">Product updates and announcements</span>
+            </label>
+          </div>
+
+          <!-- Timezone -->
+          <div class="form-group">
+            <label class="form-label" for="timezone">Timezone</label>
+            <input class="form-control" type="text" id="timezone" name="timezone"
+                   value="{{ settings.timezone }}" placeholder="UTC" maxlength="50">
+          </div>
+
+          <!-- Language -->
+          <div class="form-group">
+            <label class="form-label" for="language">Language</label>
+            <input class="form-control" type="text" id="language" name="language"
+                   value="{{ settings.language }}" placeholder="en" maxlength="10">
+            <!-- EDIT: replace with a <select> once you add i18n support -->
+          </div>
+
+          <!-- EDIT: add more preference fields here -->
+
+          <button class="btn btn--outline" type="submit">Save preferences</button>
+        </form>
+
+        <!-- ── Change password ─────────────────────────────── -->
+        <h2 id="password">Password</h2>
+        <p>Choose a strong password of at least 8 characters.</p>
+
+        <form class="sub-form" method="POST" action="{{ url_for('settings.change_password') }}" novalidate style="max-width:480px">
+
+          <div class="form-group">
+            <label class="form-label" for="current_password">Current password</label>
+            <input class="form-control" type="password" id="current_password"
+                   name="current_password" autocomplete="current-password" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new_password">New password</label>
+            <input class="form-control" type="password" id="new_password"
+                   name="new_password" minlength="8" autocomplete="new-password" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirm_password">Confirm new password</label>
+            <input class="form-control" type="password" id="confirm_password"
+                   name="confirm_password" autocomplete="new-password" required>
+          </div>
+
+          <button class="btn btn--outline" type="submit">Change password</button>
+        </form>
+
+        <!-- ── Danger zone ──────────────────────────────────── -->
+        <h2 id="danger" style="color:#BF616A">Danger Zone</h2>
+        <p>Permanently delete your account and all associated data.
+           This action <strong>cannot be undone</strong>.</p>
+
+        <div class="danger-zone">
+          <details class="faq-item">
+            <summary class="faq-item__q" style="color:#BF616A">Delete my account</summary>
+            <div style="padding:var(--space-4) var(--space-6) var(--space-6)">
+              <p class="faq-item__a" style="margin-bottom:var(--space-4)">
+                Enter your password to confirm. All your data will be permanently removed.
+              </p>
+              <form method="POST" action="{{ url_for('settings.delete_account') }}"
+                    onsubmit="return confirm('Are you absolutely sure? This cannot be undone.')">
+                <div class="form-group" style="margin-bottom:var(--space-4)">
+                  <label class="form-label" for="delete_confirm">Your password</label>
+                  <input class="form-control" type="password" id="delete_confirm"
+                         name="confirm_password" required>
+                </div>
+                <button class="btn" style="background:#BF616A;color:#ECEFF4;border-color:#BF616A" type="submit">
+                  Permanently delete account
+                </button>
+              </form>
+            </div>
+          </details>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+/* Sync the theme radio buttons with the live toggle */
+document.querySelectorAll('input[name="theme"]').forEach(radio => {
+  radio.addEventListener("change", () => {
+    if (radio.checked) {
+      /* Apply theme visually via the existing theme.js system */
+      document.documentElement.setAttribute("data-theme", radio.value);
+      localStorage.setItem("arctic-theme", radio.value);
+      /* Also sync to DB via the JSON endpoint */
+      fetch("{{ url_for('settings.sync_theme') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme: radio.value })
+      });
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1092,3 +1092,70 @@ html.theme-transitioning *::after {
     color            220ms ease,
     box-shadow       220ms ease !important;
 }
+
+/* ══════════════════════════════════════════════════════════
+   AUTH + SETTINGS PAGE STYLES
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Auth card (login / register) ──────────────────────────── */
+.auth-section { background: var(--color-bg); }
+.auth-card {
+  max-width: 440px;
+  margin-inline: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10);
+  box-shadow: var(--shadow-md);
+}
+.auth-card__header   { text-align: center; margin-bottom: var(--space-8); }
+.auth-card__title    { font-family: var(--font-display); font-size: var(--text-xl); margin-bottom: var(--space-2); }
+.auth-card__sub      { font-size: var(--text-sm); color: var(--color-text-muted); }
+.auth-card__switch   { font-size: var(--text-xs); color: var(--color-text-muted); text-align: center; }
+.auth-card__switch a { color: var(--color-accent); text-decoration: none; }
+.auth-card__switch a:hover { color: var(--color-heading); }
+
+/* ── Checkbox / radio ───────────────────────────────────────── */
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.form-check__input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.form-check__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+/* Radio group (theme selector on settings page) */
+.form-radio-group {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.form-radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.form-radio input[type="radio"] {
+  accent-color: var(--color-cta);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* ── Danger zone ────────────────────────────────────────────── */
+.danger-zone { max-width: 480px; }
+.danger-zone .faq-item { border-color: rgba(191,97,106,0.3); }
+.danger-zone .faq-item[open] { border-color: #BF616A; }

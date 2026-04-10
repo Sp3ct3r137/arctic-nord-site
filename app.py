@@ -10,7 +10,7 @@ Stack  : Python 3 / Flask
 Theme  : Arctic Nord (#2E3440 base) + Orange accent (#D08770)
 """
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
 from datetime import datetime
 
 # ---------------------------------------------------------------------------
@@ -18,6 +18,10 @@ from datetime import datetime
 # ---------------------------------------------------------------------------
 
 app = Flask(__name__)
+# Secret key needed for flash messages.
+# EDIT: replace with a real random secret in production.
+# Generate one with: python -c "import secrets; print(secrets.token_hex(32))"
+app.secret_key = "change-me-in-production"
 
 
 # ---------------------------------------------------------------------------
@@ -98,6 +102,123 @@ def about():
 def documentation():
     """Documentation page — architecture, file tree, and usage notes."""
     return render_template("docs.html")
+
+
+@app.route("/subscribe", methods=["GET", "POST"])
+def subscribe():
+    """
+    Subscription page.
+
+    GET  — renders the page with tier cards and the signup form.
+    POST — handles the form submission. Currently echoes data back as a
+           thank-you confirmation. Wire this to your payment provider
+           (Stripe, PayPal, etc.) or mailing list (Mailchimp, etc.) here.
+
+    EDIT THIS SECTION to customise tiers:
+      - name        : displayed tier name
+      - price       : price string shown on the card  (e.g. "$9 / mo")
+      - description : one-line pitch
+      - features    : list of bullet points shown on the card
+      - highlight   : True = orange CTA border (marks recommended tier)
+      - badge       : short label shown in the corner (e.g. "Popular")
+      - value       : internal identifier passed with the form submission
+    """
+    # ----------------------------------------------------------------
+    # TIERS — edit freely. Add, remove, or reorder dicts in this list.
+    # ----------------------------------------------------------------
+    tiers = [
+        {
+            "name":        "Frost",
+            "price":       "Free",
+            "period":      "",
+            "description": "Get started with the basics. No credit card needed.",
+            "features": [
+                "Access to core features",
+                "Community support via Discord",
+                "1 project",
+                "Nord theme included",
+            ],
+            "highlight":   False,
+            "badge":       "",
+            "value":       "frost",
+        },
+        {
+            "name":        "Polar",
+            "price":       "$9",
+            "period":      "/ month",
+            "description": "Everything in Frost, plus priority features and more projects.",
+            "features": [
+                "Everything in Frost",
+                "Up to 10 projects",
+                "Priority email support",
+                "Custom domain",
+                "Analytics dashboard",
+            ],
+            "highlight":   True,
+            "badge":       "Popular",
+            "value":       "polar",
+        },
+        {
+            "name":        "Aurora",
+            "price":       "$29",
+            "period":      "/ month",
+            "description": "Full power. Unlimited everything, dedicated support.",
+            "features": [
+                "Everything in Polar",
+                "Unlimited projects",
+                "Dedicated Slack channel",
+                "SLA: 99.9% uptime",
+                "Early access to new features",
+                "Custom integrations",
+            ],
+            "highlight":   False,
+            "badge":       "Enterprise",
+            "value":       "aurora",
+        },
+    ]
+
+    # ----------------------------------------------------------------
+    # Form submission handler
+    # EDIT: replace the flash/redirect with your real payment / email
+    # list logic. The submitted values are available as:
+    #   name  = request.form.get("name")
+    #   email = request.form.get("email")
+    #   tier  = request.form.get("tier")   (matches tier["value"])
+    # ----------------------------------------------------------------
+    if request.method == "POST":
+        name  = request.form.get("name",  "").strip()
+        email = request.form.get("email", "").strip()
+        tier  = request.form.get("tier",  "frost")
+
+        # Basic server-side validation
+        if not name or not email:
+            flash("Please fill in both your name and email.", "error")
+            return render_template("subscribe.html", tiers=tiers)
+
+        # --- HOOK YOUR LOGIC HERE ---
+        # e.g. stripe.checkout.Session.create(...)
+        # e.g. mailchimp.lists.members.create(...)
+        # ----------------------------
+
+        # For now: redirect to confirmation with query params
+        return redirect(url_for(
+            "subscribe_confirm",
+            name=name,
+            tier=tier,
+        ))
+
+    return render_template("subscribe.html", tiers=tiers)
+
+
+@app.route("/subscribe/confirm")
+def subscribe_confirm():
+    """
+    Thank-you confirmation page shown after a successful subscription form.
+    Receives `name` and `tier` as query parameters from the subscribe route.
+    """
+    name = request.args.get("name", "there")
+    tier = request.args.get("tier", "frost").capitalize()
+    return render_template("subscribe_confirm.html", name=name, tier=tier)
 
 
 # ---------------------------------------------------------------------------

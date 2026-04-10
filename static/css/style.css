@@ -960,3 +960,135 @@ a, button, [role='button'], input, select {
   .sub-form-wrap { padding: var(--space-8) var(--space-6); }
   .confirm-card  { padding: var(--space-8) var(--space-6); }
 }
+
+/* ══════════════════════════════════════════════════════════
+   THEME SYSTEM
+   ══════════════════════════════════════════════════════════
+   Dark theme  → [data-theme="dark"]   (default, set on <html>)
+   Light theme → [data-theme="light"]
+
+   The light theme inverts the Polar Night / Snow Storm roles:
+     - Snow Storm colours become backgrounds/surfaces
+     - Polar Night colours become text/borders
+     - Frost and orange accents stay identical — same pop,
+       different backdrop.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Dark theme (explicit — matches the :root defaults) ───── */
+[data-theme="dark"] {
+  --color-bg:         var(--nord0);
+  --color-surface:    var(--nord1);
+  --color-surface-2:  var(--nord2);
+  --color-border:     var(--nord3);
+  --color-text:       var(--nord5);
+  --color-text-muted: var(--nord4);
+  --color-heading:    var(--nord6);
+  --color-accent:     var(--nord8);
+  --color-accent-dim: var(--nord9);
+  --color-cta:        var(--orange);
+  --color-cta-hover:  var(--orange-light);
+
+  /* Nav background for dark */
+  --nav-bg: rgba(46, 52, 64, 0.9);
+}
+
+/* ── Light theme ────────────────────────────────────────────
+   Backgrounds  → Snow Storm  (nord6 lightest → nord4 warmest)
+   Surfaces     → slightly darker Snow Storm
+   Text         → Polar Night (nord0 darkest → nord3 muted)
+   Accents      → same Frost + orange
+   ────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  /* Backgrounds use Snow Storm (lightest = most surface) */
+  --color-bg:         #ECEFF4;   /* nord6 — page background */
+  --color-surface:    #E5E9F0;   /* nord5 — cards, nav */
+  --color-surface-2:  #D8DEE9;   /* nord4 — inputs, hover */
+  --color-border:     #C4CCDB;   /* between nord4 and nord3 */
+
+  /* Text uses Polar Night (darkest = highest contrast) */
+  --color-text:       #3B4252;   /* nord1 — body text */
+  --color-text-muted: #4C566A;   /* nord3 — secondary text */
+  --color-heading:    #2E3440;   /* nord0 — headings, max contrast */
+
+  /* Frost and orange stay the same */
+  --color-accent:     var(--nord8);
+  --color-accent-dim: var(--nord9);
+  --color-cta:        var(--orange);
+  --color-cta-hover:  var(--orange-light);
+
+  /* Nav background for light */
+  --nav-bg: rgba(229, 233, 240, 0.92);
+
+  /* Shadows lighter on a light background */
+  --shadow-sm: 0 1px 3px rgba(46,52,64,0.12);
+  --shadow-md: 0 4px 16px rgba(46,52,64,0.14);
+  --shadow-lg: 0 12px 40px rgba(46,52,64,0.18);
+}
+
+/* ── Nav background uses token so it switches too ──────────── */
+.nav {
+  background: var(--nav-bg, rgba(46, 52, 64, 0.9));
+}
+
+/* Light-mode specific overrides */
+[data-theme="light"] .terminal,
+[data-theme="light"] .file-tree {
+  background: var(--color-surface-2);
+  border-color: var(--color-border);
+}
+[data-theme="light"] .terminal__bar {
+  background: var(--color-border);
+  border-bottom-color: var(--color-border);
+}
+[data-theme="light"] .terminal__output,
+[data-theme="light"] .file-tree     { color: var(--color-heading); }
+[data-theme="light"] .stack-table th { background: var(--color-surface-2); }
+[data-theme="light"] .form-control   { background: var(--color-surface-2); }
+[data-theme="light"] .form-control:focus { background: #ECEFF4; }
+[data-theme="light"] .docs-content pre  { background: var(--color-surface); }
+[data-theme="light"] .docs-content code { background: var(--color-surface-2); }
+
+/* ── Theme toggle button ────────────────────────────────────
+   Sits in the nav between the links and the CTA.
+   Shows a sun icon in dark mode, moon icon in light mode.
+   ────────────────────────────────────────────────────────── */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background var(--ease), border-color var(--ease),
+              color var(--ease), transform var(--ease);
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  background: var(--color-surface-2);
+  color: var(--color-heading);
+  border-color: var(--color-accent);
+}
+.theme-toggle:active { transform: scale(0.92); }
+
+/* Icon swap — JS toggles data-theme on <html>,
+   CSS shows the right icon via display */
+.theme-toggle__sun  { display: none; }
+.theme-toggle__moon { display: block; }
+
+[data-theme="light"] .theme-toggle__sun  { display: block; }
+[data-theme="light"] .theme-toggle__moon { display: none; }
+
+/* Smooth global transition when theme switches */
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition:
+    background-color 220ms ease,
+    border-color     220ms ease,
+    color            220ms ease,
+    box-shadow       220ms ease !important;
+}

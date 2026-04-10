@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Create Account — Arctic Nord{% endblock %}
+
+{% block content %}
+<section class="auth-section section">
+  <div class="container">
+    <div class="auth-card">
+
+      <div class="auth-card__header">
+        <h1 class="auth-card__title">Create an account</h1>
+        <p class="auth-card__sub">Get started for free — no credit card needed.</p>
+      </div>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="flash flash--{{ category }}" role="alert">
+            <span>{{ message }}</span>
+            <button class="flash__close" onclick="this.parentElement.remove()" aria-label="Dismiss">✕</button>
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form class="sub-form" method="POST" action="{{ url_for('auth.register') }}" novalidate>
+
+        <!-- Username -->
+        <div class="form-group">
+          <label class="form-label" for="username">
+            Username <span class="form-label__req" aria-label="required">*</span>
+          </label>
+          <input
+            class="form-control"
+            type="text"
+            id="username"
+            name="username"
+            placeholder="zeroch1ll"
+            autocomplete="username"
+            minlength="3"
+            maxlength="80"
+            required
+            value="{{ username }}"
+          />
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="email">
+            Email <span class="form-label__req" aria-label="required">*</span>
+          </label>
+          <input
+            class="form-control"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+            value="{{ email }}"
+          />
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="password">
+            Password <span class="form-label__req" aria-label="required">*</span>
+          </label>
+          <input
+            class="form-control"
+            type="password"
+            id="password"
+            name="password"
+            placeholder="At least 8 characters"
+            autocomplete="new-password"
+            minlength="8"
+            required
+          />
+        </div>
+
+        <!-- Confirm password -->
+        <div class="form-group">
+          <label class="form-label" for="confirm">
+            Confirm password <span class="form-label__req" aria-label="required">*</span>
+          </label>
+          <input
+            class="form-control"
+            type="password"
+            id="confirm"
+            name="confirm"
+            placeholder="Repeat password"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+
+        <!-- EDIT: add any extra fields here (e.g. invite code, company name) -->
+
+        <button class="btn btn--primary sub-form__submit" type="submit">Create account →</button>
+
+        <p class="sub-form__legal">
+          By creating an account you agree to our
+          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        </p>
+
+        <p class="auth-card__switch">
+          Already have an account?
+          <a href="{{ url_for('auth.login') }}">Log in</a>
+        </p>
+      </form>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

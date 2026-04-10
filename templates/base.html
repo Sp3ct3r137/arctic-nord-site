@@ -62,6 +62,9 @@
         <li><a href="{{ url_for('documentation') }}" class="{{ 'active' if request.endpoint == 'documentation' }}">Docs</a></li>
         <li><a href="{{ url_for('subscribe') }}"     class="{{ 'active' if request.endpoint in ('subscribe', 'subscribe_confirm') }}">Subscribe</a></li>
         <li><a href="/api/palette"                   target="_blank" rel="noopener">API ↗</a></li>
+        {% if current_user.is_authenticated %}
+        <li><a href="{{ url_for('settings.index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('settings') }}">Settings</a></li>
+        {% endif %}
       </ul>
 
       <!-- Theme toggle -->
@@ -94,7 +97,13 @@
         </svg>
       </button>
 
-      <a href="{{ url_for('subscribe') }}" class="nav__cta">Get Started</a>
+      {% if current_user.is_authenticated %}
+        <form method="POST" action="{{ url_for('auth.logout') }}" style="margin:0">
+          <button class="nav__cta" type="submit" style="cursor:pointer">Log out</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="nav__cta">Log in</a>
+      {% endif %}
     </div>
   </nav>
 

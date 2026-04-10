@@ -1,2 +1,19 @@
+# ── Web framework ─────────────────────────────────────────────
 flask>=3.0.0
 gunicorn>=21.2.0
+
+# ── Database ──────────────────────────────────────────────────
+flask-sqlalchemy>=3.1.0      # SQLAlchemy ORM integration for Flask
+psycopg2-binary>=2.9.9       # PostgreSQL driver (binary = no libpq build dep)
+flask-migrate>=4.0.7         # Alembic migrations via `flask db` CLI
+
+# ── Authentication ────────────────────────────────────────────
+flask-login>=0.6.3           # Session management + @login_required
+flask-bcrypt>=1.0.1          # bcrypt password hashing
+
+# ── Security ──────────────────────────────────────────────────
+flask-limiter>=3.5.0         # Rate limiting (brute-force protection)
+cryptography>=42.0.0         # Fernet encryption for OAuth tokens
+
+# ── Environment ───────────────────────────────────────────────
+python-dotenv>=1.0.1         # Load .env files into os.environ

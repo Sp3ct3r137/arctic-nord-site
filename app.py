@@ -2,40 +2,108 @@
 app.py — Arctic Nord Flask Application
 =======================================
 Entry point for the Arctic Nord themed website.
-Serves all HTML pages via Flask routes and exposes
-a lightweight JSON API endpoint for demo purposes.
+Now uses an application factory (create_app) so Flask-Migrate,
+Flask-Login, and other extensions can be initialised properly.
 
 Author : Zero Ch1ll
-Stack  : Python 3 / Flask
+Stack  : Python 3 / Flask + SQLAlchemy + PostgreSQL
 Theme  : Arctic Nord (#2E3440 base) + Orange accent (#D08770)
+
+Environment variables (set in .env):
+    SECRET_KEY          — Flask session signing key
+    DATABASE_URL        — PostgreSQL connection string
+    FERNET_KEY          — Encryption key for OAuth tokens
 """
 
+import os
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load .env file (does nothing if already set in environment)
+load_dotenv()
+
 
 # ---------------------------------------------------------------------------
 # Application factory
 # ---------------------------------------------------------------------------
 
-app = Flask(__name__)
-# Secret key needed for flash messages.
-# EDIT: replace with a real random secret in production.
-# Generate one with: python -c "import secrets; print(secrets.token_hex(32))"
-app.secret_key = "change-me-in-production"
+def create_app() -> Flask:
+    """
+    Create and configure the Flask application.
+    Using a factory allows extensions to be initialised without circular
+    imports and makes the app testable (just call create_app() in tests).
+    """
+    app = Flask(__name__)
 
+    # ── Core config ───────────────────────────────────────────
+    # SECRET_KEY signs session cookies — must be random and secret in prod.
+    # Generate: python -c "import secrets; print(secrets.token_hex(32))"
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-production")
 
-# ---------------------------------------------------------------------------
-# Context processor — injects the current year into every template
-# so the footer copyright stays fresh automatically.
-# ---------------------------------------------------------------------------
-
-@app.context_processor
-def inject_globals():
-    """Make shared template variables available site-wide."""
-    return {
-        "current_year": datetime.now().year,
-        "site_name": "Arctic Nord",
+    # ── Database ──────────────────────────────────────────────
+    # DATABASE_URL from .env, e.g.:
+    #   postgresql://user:password@localhost:5432/arctic_nord
+    # SQLite fallback for local dev without PostgreSQL:
+    #   sqlite:///arctic_nord.db
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+        "DATABASE_URL",
+        "sqlite:///arctic_nord.db"   # fallback: SQLite for local dev
+    )
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,   # reconnect if connection dropped
     }
+
+    # ── Session cookie security ───────────────────────────────
+    app.config["SESSION_COOKIE_HTTPONLY"] = True    # JS cannot read cookie
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # CSRF protection
+    # Set to True in production (requires HTTPS):
+    app.config["SESSION_COOKIE_SECURE"]   = os.environ.get("FLASK_ENV") == "production"
+    app.config["REMEMBER_COOKIE_HTTPONLY"]= True
+    app.config["REMEMBER_COOKIE_SECURE"]  = os.environ.get("FLASK_ENV") == "production"
+
+    # ── Initialise extensions ─────────────────────────────────
+    from extensions import db, login_manager, bcrypt, limiter
+    db.init_app(app)
+    login_manager.init_app(app)
+    bcrypt.init_app(app)
+    limiter.init_app(app)
+
+    # ── Register blueprints ───────────────────────────────────
+    from routes.auth     import auth_bp
+    from routes.settings import settings_bp
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(settings_bp)
+
+    # ── Register all page routes ──────────────────────────────
+    _register_routes(app)
+
+    return app
+
+
+# ---------------------------------------------------------------------------
+# Backward-compat: top-level `app` for Gunicorn / python app.py
+# ---------------------------------------------------------------------------
+app = create_app()
+
+
+# ---------------------------------------------------------------------------
+# Route registration helper (called inside create_app)
+# ---------------------------------------------------------------------------
+
+def _register_routes(app: Flask):
+    """Attach all view functions and context processors to the app instance."""
+
+    @app.context_processor
+    def inject_globals():
+        """Make shared template variables available site-wide."""
+        from flask_login import current_user
+        return {
+            "current_year": datetime.now().year,
+            "site_name": "Arctic Nord",
+            "current_user": current_user,
+        }
 
 
 # ---------------------------------------------------------------------------

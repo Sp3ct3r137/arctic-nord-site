@@ -42,45 +42,53 @@ Open **http://localhost:5000** in your browser.
 
 ## File Structure
 
-```
+```text
 arctic-nord-site/
-├── app.py                  # Flask app — routes, context processor, JSON API
-├── requirements.txt        # Flask >= 3.0
+├── app.py                  # Flask app — Application factory & core routes
+├── models.py               # SQLAlchemy ORM models (User, Subscription, etc.)
+├── extensions.py           # Shared Flask extension instances
+├── requirements.txt        # Project dependencies
+├── .env.example            # Template for environment variables
 ├── README.md               # this file
+├── docker-compose.yml      # Docker multi-container setup
+├── Dockerfile              # App container definition
 │
-├── templates/
-│   ├── base.html           # shared layout (nav, footer, fonts, favicon)
-│   ├── index.html          # home — hero, feature cards, API demo
+├── routes/                 # Blueprint-based route modules
+│   ├── auth.py             # Login, register, logout
+│   └── settings.py         # Profile & preference management
+│
+├── templates/              # Jinja2 templates
+│   ├── auth/               # Auth-specific pages
+│   ├── base.html           # shared layout
+│   ├── index.html          # home
 │   ├── about.html          # palette swatches, tech stack
-│   └── docs.html           # full documentation page
+│   ├── docs.html           # documentation
+│   ├── settings.html       # user settings
+│   └── subscribe.html      # pricing & tiers
 │
-├── static/
-│   ├── css/
-│   │   └── style.css       # all styles — Nord CSS tokens + components
-│   └── js/
-│       └── main.js         # canvas snow, fetch demo, scroll FX
+├── static/                 # Static assets
+│   ├── css/style.css       # Nord CSS tokens + components
+│   └── js/main.js          # Interactive features
 │
+├── migrations/             # Database migration scripts (Flask-Migrate)
+├── nginx/                  # Nginx configuration for production
+├── scripts/                # Utility scripts (e.g., HTTPS setup)
 └── docs/
-    └── COLOURS.md          # standalone colour reference with role table
+    └── COLOURS.md          # standalone colour reference
 ```
 
 ---
 
 ## How It Works
 
-### 1. Flask Routes (`app.py`)
+### 1. Application Factory & Architecture
 
-Each page is a plain Python function decorated with `@app.route`:
+The project uses the **Application Factory** pattern (`create_app`) in `app.py`. This decoupled structure allows for better testability and prevents circular imports between models and extensions.
 
-```python
-@app.route("/")
-def index():
-    features = [...]   # passed into Jinja2 template
-    return render_template("index.html", features=features)
-```
-
-A `@app.context_processor` injects `current_year` and `site_name` into
-**every** template automatically — no need to pass them per-route.
+- **`extensions.py`**: Initialises Flask extensions (SQLAlchemy, LoginManager, Bcrypt, Limiter) without binding them to a specific app instance.
+- **Blueprints**: Feature-specific routes are modularised into blueprints in the `routes/` directory.
+  - `auth_bp`: Handles registration, login, and session management.
+  - `settings_bp`: Handles user profile updates and preference syncing.
 
 ### 2. Template Inheritance (`templates/`)
 
@@ -148,7 +156,54 @@ Three features — no external libraries:
 }
 ```
 
-Extend it with query-string filtering or connect a database for dynamic themes.
+---
+
+## Database & Migrations
+
+The site uses **SQLAlchemy** (via Flask-SQLAlchemy) for ORM and **Flask-Migrate** (Alembic) for schema management.
+
+### Supported Databases
+- **PostgreSQL**: Recommended for production. Set `DATABASE_URL` in your `.env`.
+- **SQLite**: Automatic fallback for local development if no `DATABASE_URL` is provided.
+
+### Common Migration Commands
+```bash
+# Initialise the migration directory (already done in this repo)
+flask db init
+
+# Generate a new migration script after changing models.py
+flask db migrate -m "Description of change"
+
+# Apply migrations to the database
+flask db upgrade
+```
+
+---
+
+## Authentication & Security
+
+A robust security layer is implemented using industry-standard libraries:
+
+- **Flask-Login**: Manages user sessions and provides the `@login_required` decorator.
+- **Flask-Bcrypt**: Handles secure password hashing (salted bcrypt).
+- **Flask-Limiter**: Protects against brute-force attacks on auth routes (e.g., 10 login attempts per minute).
+- **Server-side Sessions**: Active sessions are tracked in the database, allowing for instant revocation and audit logs (IP, User-Agent).
+- **Fernet Encryption**: OAuth tokens (when implemented) are encrypted at rest using symmetric AES encryption.
+
+---
+
+## User Settings & Subscriptions
+
+### Pricing Tiers
+The site includes a `/subscribe` page with three distinct tiers:
+1. **Frost (Free)**: Basic access for individuals.
+2. **Polar ($9/mo)**: Priority support and more projects.
+3. **Aurora ($29/mo)**: Enterprise-grade features and unlimited scale.
+
+### Persistence
+User preferences are stored in the `user_settings` table and synced across sessions:
+- **Theme Sync**: Changing the theme via the JS toggle automatically updates the user's preference in the database if they are logged in.
+- **Notifications**: Email and marketing preferences can be toggled from the `/settings` page.
 
 ---
 
@@ -288,7 +343,16 @@ def my_data():
 
 | Package | Version | Why |
 |---------|---------|-----|
-| Flask   | ≥ 3.0   | Web framework — routing, Jinja2, `jsonify` |
+| **Flask** | ≥ 3.0 | Core web framework |
+| **Flask-SQLAlchemy** | ≥ 3.1 | Database ORM integration |
+| **Flask-Migrate** | ≥ 4.0 | Database migrations (Alembic) |
+| **Flask-Login** | ≥ 0.6 | User session management |
+| **Flask-Bcrypt** | ≥ 1.0 | Secure password hashing |
+| **Flask-Limiter** | ≥ 3.5 | Rate limiting / brute-force protection |
+| **cryptography** | ≥ 42.0 | Fernet encryption for tokens |
+| **psycopg2-binary** | ≥ 2.9 | PostgreSQL adapter |
+| **python-dotenv** | ≥ 1.0 | Environment variable management |
+| **Gunicorn** | ≥ 21.2 | WSGI HTTP Server for production |
 
 Zero frontend dependencies — plain HTML, CSS, and vanilla JavaScript.
 
